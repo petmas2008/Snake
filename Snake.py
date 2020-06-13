@@ -6,57 +6,61 @@ HEIGHT = 400
 
 # need to implement coord system
 
+
 class GameObjects:
 
     def __init__(self, cell_number):
         self.cell_number = cell_number
         self.cell_size = WIDTH // cell_number, HEIGHT // cell_number
-        self.board = {}
 
 
 class Snake:
 
     def __init__(self, size):
         self.size = size
-        self.snake_counter = 0
-        self.snake_direction = None
-        self.snake_speed = 0.5
+        self.x, self.y = 0, 0
+        self.current_direction = None
+        self.speed = 0.5
         # The lower the number the fastest the snake goes
         # This is because this number is used as a parameter for time.sleep
 
     def get_snake_rect(self):
-        x = self.snake_counter * game_objects.cell_size[0]
-        y = self.snake_counter * game_objects.cell_size[1]
-        if self.snake_direction == "down":
-            x = y - game_objects.cell_size[1]
-            print("down")
-        return x, y
+        current_x = self.x * game_objects.cell_size[0]
+        current_y = self.y * game_objects.cell_size[1]
+        print(game_objects.cell_size)
+        return current_x, current_y
 
-    def move_snake(self):
+    def move(self, direction):
+        self.current_direction = direction
+        if direction == "up":
+            self.y -= 1
+        elif direction == "down":
+            self.y += 1
+        elif direction == "left":
+            self.x -= 1
+        elif direction == "right":
+            self.x += 1
+
+    def draw_snake(self):
+        self.move(self.current_direction)
+        time.sleep(self.speed)
         snake_rect = Rect((self.get_snake_rect()), game_objects.cell_size)
-        self.snake_counter += 1
         return snake_rect
 
 
 game_objects = GameObjects(20)
 snake = Snake(game_objects.cell_number)
 
-for row in range(game_objects.cell_number):
-    for column in range(game_objects.cell_number):
-        game_objects.board[row, column] = "empty"
-        
 
 def on_key_down(key):
     if key == keys.W:
-        snake.snake_direction = "up"
+        snake.move("up")
     if key == keys.S:
-        snake.snake_direction = "down"
-        snake.snake_counter += 1
-        print("d")
+        snake.move("down")
     if key == keys.A:
-        snake.snake_direction = "left"
+        snake.move("left")
     if key == keys.D:
-        snake.snake_direction = "right"
+        snake.move("right")
 
 
 def draw():
@@ -80,10 +84,8 @@ def draw():
 
 
 def update():
-    print("Hello")
     screen.clear()
-    screen.draw.filled_rect(snake.move_snake(), (255, 255, 255))
-    time.sleep(snake.snake_speed)
+    screen.draw.filled_rect(snake.draw_snake(), (255, 255, 255))
 
 
 pgzrun.go()
