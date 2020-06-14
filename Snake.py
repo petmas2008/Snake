@@ -16,18 +16,17 @@ class GameObjects:
 
 class Snake:
 
-    def __init__(self, size):
+    def __init__(self, size, speed):
         self.size = size
         self.x, self.y = 0, 0
         self.current_direction = None
-        self.speed = 0.5
+        self.speed = speed
         # The lower the number the fastest the snake goes
         # This is because this number is used as a parameter for time.sleep
 
     def get_snake_rect(self):
         current_x = self.x * game_objects.cell_size[0]
         current_y = self.y * game_objects.cell_size[1]
-        print(game_objects.cell_size)
         return current_x, current_y
 
     def move(self, direction):
@@ -41,15 +40,27 @@ class Snake:
         elif direction == "right":
             self.x += 1
 
+    def check_boundaries(self, x, y, boundary):
+        if x == boundary:
+            return False
+        elif y == boundary:
+            return False
+        else:
+            return True
+
     def draw_snake(self):
-        self.move(self.current_direction)
-        time.sleep(self.speed)
-        snake_rect = Rect((self.get_snake_rect()), game_objects.cell_size)
-        return snake_rect
+        print(self.size)
+        if self.check_boundaries(self.x, self.y, self.size):
+            self.move(self.current_direction)
+            time.sleep(self.speed)
+            snake_rect = Rect((self.get_snake_rect()), game_objects.cell_size)
+            return snake_rect
+        else:
+            self.draw_snake()
 
 
 game_objects = GameObjects(20)
-snake = Snake(game_objects.cell_number)
+snake = Snake(game_objects.cell_number, 0.25)
 
 
 def on_key_down(key):
@@ -66,6 +77,7 @@ def on_key_down(key):
 def draw():
     screen_rect = Rect((0, 0), (WIDTH, HEIGHT))
     screen.draw.rect(screen_rect, (255, 255, 255))
+    screen.draw.filled_rect(snake.draw_snake(), (255, 255, 255))
     for cell in range(game_objects.cell_number):
         row_cell = cell * game_objects.cell_size[0]
         screen.draw.line(
@@ -85,7 +97,6 @@ def draw():
 
 def update():
     screen.clear()
-    screen.draw.filled_rect(snake.draw_snake(), (255, 255, 255))
 
 
 pgzrun.go()
