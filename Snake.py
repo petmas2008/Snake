@@ -26,25 +26,35 @@ class Snake:
         self.move_status = True
         self.blocked_direction = None
         self.length = 1
-        # The lower the number the fastest the snake goes
+        self.create_coord_sys()
+        # cooThe lower the number the fastest the snake goes
         # This is because this number is used as a parameter for time.sleep
 
-    def analyse_length(self):
-        # current_x, current_y are the current_x and current_y for the rect 
-        # in the function where it is being called
-        size_x = game_objects.cell_size[0]
-        size_y = game_objects.cell_size[1]
-        print(self.length)
-        if self.length > 1:
-            if self.current_direction == "up":
-                size_y += size_y * self.length
-            if self.current_direction == "down":
-                size_y -= size_y * self.length
-            if self.current_direction == "left":
-                size_x += size_x * self.length
-            if self.current_direction == "right":
-                size_x -= size_x * self.length
-        return size_x, size_y
+    def create_coord_sys(self):
+        self.coord_sys = {}
+        for y in range(game_objects.cell_number):
+            for x in range(game_objects.cell_number):
+                self.coord_sys[x, y] = False
+        self.coord_sys[self.x, self.y] = True
+
+    def clear_coord_sys(self):
+        for x, y in self.coord_sys.keys():
+            self.coord_sys[x, y] = False
+
+    def update_coord_sys(self):
+        self.coord_sys[self.x, self.y] = True
+        for current_length in range(self.length):
+            self.coord_sys[self.analyse_length(current_length)] = True
+
+    def analyse_length(self, current_length):
+        if self.current_direction == "up":
+            return self.y + current_length, self.x
+        if self.current_direction == "down":
+            return self.y - current_length, self.x
+        if self.current_direction == "left":
+            return self.y, self.x  - current_length
+        if self.current_direction == "right":
+            return self.y, self.x + current_length
 
     def get_snake_rect(self):
         current_x = self.x * game_objects.cell_size[0]
@@ -66,6 +76,9 @@ class Snake:
                 self.x -= 1
             elif direction == "right":
                 self.x += 1
+        self.clear_coord_sys()
+        self.update_coord_sys()
+        print(self.coord_sys)
 
     def check_boundaries(self):
         self.move_status = True
@@ -84,13 +97,18 @@ class Snake:
             self.blocked_direction.append("down")
 
     def draw_snake(self):
-        size = self.analyse_length()
+        # size = self.analyse_length()
         self.check_boundaries()
         self.move(self.current_direction)
         time.sleep(self.speed)
-        snake_rect = Rect((self.get_snake_rect()), size)
-        return snake_rect
-
+        # snake_rect = Rect((self.get_snake_rect()), size)
+        # return snake_rect
+        snake_info = []
+        for x, y in self.coord_sys.keys():
+            if self.coord_sys[x, y]:
+                snake_info.append((x * game_objects.cell_size[0], y * game_objects.cell_size[1]))
+        return snake_info
+ 
 
 class Consumable:
 
@@ -102,8 +120,7 @@ class Consumable:
     def check_if_hit(self):
         if (snake.x, snake.y) == (self.x, self.y):
             snake.length += 1
-            print("hit", snake.length)
-            print(snake.x, snake.y, self.x, self.y)
+            snake.coord_sys[snake.x, snake.y] = True
             self.hit = True
         else:
             self.hit = False
@@ -130,7 +147,7 @@ class Consumable:
 
 
 game_objects = GameObjects(20)
-snake = Snake(game_objects.cell_number, 0.10)
+snake = Snake(game_objects.cell_number, 0.15)
 consumable = Consumable(game_objects.cell_number)
 
 
@@ -149,12 +166,17 @@ def draw():
     # These are rectangles for  
     # certain objects in the programme
     screen_rect = Rect((0, 0), (WIDTH, HEIGHT))
-    snake_rect = snake.draw_snake()
+    # snake_rect = snake.draw_snake()
     consumable_rect = consumable.draw_consumable()
     # Actually drawing the rectangles on the screen 
     screen.draw.rect(screen_rect, (255, 255, 255))
-    screen.draw.filled_rect(snake_rect, (0, 255, 0))
+    # screen.draw.filled_rect(snake_rect, (0, 255, 0))
     screen.draw.filled_rect(consumable_rect, (255, 0, 0))
+
+    for x, y in snake.draw_snake():
+        current_rect = Rect((x, y), game_objects.cell_size)
+        screen.draw.filled_rect(current_rect, (0, 255, 0))
+
     # Draws a grid
     for cell in range(game_objects.cell_number):
         row_cell = cell * game_objects.cell_size[0]
